@@ -21,7 +21,7 @@ public class Worker : BackgroundService
         long seq = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
-            await _writer.LogMessageAsync("Again " + seq++);
+            await _writer.LogMessageAsync($"Again {seq++}");
             _logger.LogInformation("Worker running at: {0}, btw my data folder is : {1}", DateTimeOffset.Now, Environment.GetEnvironmentVariable("ProgramData"));
             await Task.Delay(1000, stoppingToken);
         }
