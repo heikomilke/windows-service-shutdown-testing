@@ -18,8 +18,7 @@ public class Worker : BackgroundService
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        
-        await _writer.LogMessageAsync("I came through stop. Reason: " );
+        await _writer.LogMessageAsync("I came through stop. Reason: ");
         await base.StopAsync(cancellationToken);
     }
 
@@ -38,29 +37,43 @@ public class Worker : BackgroundService
             }
             catch (Exception delayEx)
             {
-                await _writer.LogMessageAsync("Caught delay ex: "+ delayEx);
+                await _writer.LogMessageAsync("Caught delay ex: " + delayEx);
             }
         }
 
-        
+
         await _writer.LogMessageAsync($"Exiting loop. Token is: {stoppingToken}");
         await LogProcesses();
-        
-        // now comes the evil part ... we try to stay alive for a few seconds and keep logging processes
-        for (int i = 0; i < 10; i++)
-        {
-            // we intentionally avoid use of cancel token here .. we aim to stay alive through this
-            // ReSharper disable once MethodSupportsCancellation
-            await Task.Delay(500);
-            await _writer.LogMessageAsync($"Stretch {i}");
-            await LogProcesses();
 
+        // now comes the evil part ... we try to stay alive for a few seconds and keep logging processes
+        try
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                // we intentionally avoid use of cancel token here .. we aim to stay alive through this
+                // ReSharper disable once MethodSupportsCancellation
+                try
+                {
+                    await Task.Delay(500);
+                }
+                catch
+                {
+                    await _writer.LogMessageAsync("Failed to delay :(");
+                    // ignore
+                }
+
+                await _writer.LogMessageAsync($"Stretch {i}");
+                await LogProcesses();
+            }
+        }
+        catch (Exception evilEx)
+        {
+            await _writer.LogMessageAsync($"Caught evilEx {evilEx}");
         }
     }
 
     private async Task LogProcesses()
     {
-
         StringBuilder sb = new();
         List<string> errors = new();
         sb.AppendFormat("Processes:");
@@ -69,7 +82,6 @@ public class Worker : BackgroundService
         {
             try
             {
-                
                 sb.AppendFormat("{0,-30} {1,-10} {2}", process.ProcessName, process.Id, GetProcessPath(process));
             }
             catch (Exception ex)
@@ -83,7 +95,8 @@ public class Worker : BackgroundService
                 {
                     //ignored
                 }
-                errors.Add($"Failed to log a process. Name: {nameornothing}, Ex: {ex}" );
+
+                errors.Add($"Failed to log a process. Name: {nameornothing}, Ex: {ex}");
             }
 
             sb.AppendLine();
@@ -92,9 +105,8 @@ public class Worker : BackgroundService
         if (errors.Any())
             await _writer.LogMessageAsync("Got errors: " + string.Join("\r\n", errors));
         await _writer.LogMessageAsync(sb.ToString());
-
     }
-    
+
     // security might prevent us from getting path so lets try catch it here
     static string GetProcessPath(Process process)
     {
