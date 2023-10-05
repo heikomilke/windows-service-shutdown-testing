@@ -14,16 +14,32 @@ public class Worker : BackgroundService
         installer.EnsureInstalled();
     }
 
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        
+        await _writer.LogMessageAsync("I came through stop");
+        await base.StopAsync(cancellationToken);
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await _writer.ConnectAsync(stoppingToken);
-        await _writer.LogMessageAsync("Connection made");
+        await _writer.LogMessageAsync("Connection made with new service");
         long seq = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
             await _writer.LogMessageAsync($"Again {seq++}");
             _logger.LogInformation("Worker running at: {0}, btw my data folder is : {1}", DateTimeOffset.Now, Environment.GetEnvironmentVariable("ProgramData"));
-            await Task.Delay(1000, stoppingToken);
+            try
+            {
+                await Task.Delay(1000, stoppingToken);
+            }
+            catch (Exception delayEx)
+            {
+                await _writer.LogMessageAsync("Caught delay ex: "+ delayEx);
+            }
         }
+
+        await _writer.LogMessageAsync($"Exiting loop. Token is: {stoppingToken}");
     }
 }
