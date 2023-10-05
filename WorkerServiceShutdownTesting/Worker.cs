@@ -32,11 +32,9 @@ public class Worker : BackgroundService
         long seq = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
-            //await _writer.LogMessageAsync($"Again {seq++}");
-            _logger.LogInformation("Worker running at: {0}, btw my data folder is : {1}", DateTimeOffset.Now, Environment.GetEnvironmentVariable("ProgramData"));
             try
             {
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(Timeout.Infinite, stoppingToken);
             }
             catch (Exception delayEx)
             {
@@ -47,6 +45,17 @@ public class Worker : BackgroundService
         
         await _writer.LogMessageAsync($"Exiting loop. Token is: {stoppingToken}");
         await LogProcesses();
+        
+        // now comes the evil part ... we try to stay alive for a few seconds and keep logging processes
+        for (int i = 0; i < 10; i++)
+        {
+            // we intentionally avoid use of cancel token here .. we aim to stay alive through this
+            // ReSharper disable once MethodSupportsCancellation
+            await Task.Delay(500);
+            await _writer.LogMessageAsync($"Stretch {i}");
+            await LogProcesses();
+
+        }
     }
 
     private async Task LogProcesses()
