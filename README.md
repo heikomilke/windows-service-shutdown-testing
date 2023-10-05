@@ -22,3 +22,8 @@ We want to find out what the events are that we (a dotnet core service) catch wh
 - can we find out the reason for the shutdown
 - for how long can we ignore the shutdown
   - are methods like Delay etc still available to us while in mode shutdown?
+ 
+# update
+
+- we added some code that attempts to stay alive after the shutdown has been caught
+- we managed to stay in a loop for 1 more second but after that we fail any further exceptions or anything else and the system reboots
