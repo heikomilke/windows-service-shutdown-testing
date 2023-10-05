@@ -1,4 +1,5 @@
 using WorkerServiceShutdownTesting;
+using WorkerServiceShutdownTesting.Data;
 
 IHost host = Host.CreateDefaultBuilder(args)
     // The method UseWindowsService will take care of all the configuration for you within Windows.
@@ -9,6 +10,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services
             .AddHostedService<Worker>()
+            .AddSingleton<DatabaseWriter>()
             .AddTransient<Installer>();
     })
     .Build();

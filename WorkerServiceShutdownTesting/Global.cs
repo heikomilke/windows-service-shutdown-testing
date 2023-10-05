@@ -8,6 +8,6 @@
     public static string DataFolder { get; set; }
 
     public static string DatabasePath { get; set; }
-    
-    public static string LogTableName { get; set; }
+
+    public static string LogTableName { get; set; } = "LogMessage";
 }
